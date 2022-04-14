@@ -37,24 +37,32 @@ def rename_branch(org, repo, old_name, new_name, dry_run=True):
     log = []
     gh_repo = gh.get_organization(org).get_repo(repo)
     log.append(gh_repo.full_name)
-
+    print(gh_repo)
     # Git reference of the branch that you wish to delete
     source = gh_repo.get_git_ref("heads/" + old_name)
 
-    # Create new branch from old branch
-    log.append("create branch " + new_name + " from " + old_name)
-    if not dry_run:
-        gh_repo.create_git_ref("refs/heads/" + new_name, sha=source.object.sha)
+    # Get current default branch protection
+    try:
+        protection = gh_repo.get_branch(old_name).get_protection()
+        print(protection)
+    except:
+        # Create new branch from old branch
+        log.append("create branch " + new_name + " from " + old_name)
+        if not dry_run:
+            new_default = gh_repo.create_git_ref("refs/heads/" + new_name,
+                                                       sha=source.object.sha)
 
-    # Delete old branch reference
-    log.append("delete branch " + old_name)
-    if not dry_run:
-        source.delete()
+        log.append("set default branch to " + new_name)
+        if not dry_run:
+            # sleep(1)
+            gh_repo.edit(default_branch=new_name)
+
+            # Delete old branch reference
+        log.append("delete branch " + old_name)
+        if not dry_run:
+            source.delete()
+
     return log
-
-
-def csv_out(out_list: list):
-    pass
 
 
 def confirm():
@@ -92,8 +100,10 @@ def main():
 
     input_org_selection = input("\nOrg number: ")
     run_orgs = which_orgs(input_org_selection, orgs)
+    print(run_orgs)
     repos = filtered_repos(run_orgs, input_old_branch)
-    input("Ready. Continue?")
+    print(repos)
+    input("Ready. Press enter to continue.")
     if confirm() == 1:
         print("Abort!")
         return 0
@@ -101,7 +111,8 @@ def main():
     for repo in repos:
         # rename_branch(org, repo, old_name, new_name, dry_run=True):
         log_out.append(
-            rename_branch(repo[0], repo[1], input_old_branch, input_new_branch, dry_run)
+            rename_branch(repo[0], repo[1], input_old_branch, input_new_branch,
+                          dry_run)
         )
     for log in log_out:
         print(log)
