@@ -76,7 +76,7 @@ def which_orgs(input_selection, orgs):
     if input_selection == "a":
         # print("Running against all orgs")
         return orgs
-    if (int(input_selection) - 1) > 0:
+    if (int(input_selection) - 1) >= 0:
         # print("Running against " + orgs[int(input_selection) - 1])
         return [orgs[int(input_selection) - 1]]
 
@@ -102,7 +102,8 @@ def main():
     run_orgs = which_orgs(input_org_selection, orgs)
     print(run_orgs)
     repos = filtered_repos(run_orgs, input_old_branch)
-    print(repos)
+    for this_repo in repos:
+        print(this_repo[1])
     input("Ready. Press enter to continue.")
     if confirm() == 1:
         print("Abort!")
